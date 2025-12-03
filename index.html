@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In-House Diff Checker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>In-House Diff Checker</h1>
+            <p class="subtitle">Compare transcripts and merge differences</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-panel">
+                <div class="panel-header">
+                    <h2>Transcript without codes</h2>
+                    <div class="header-actions">
+                        <input type="file" id="file1" accept=".txt,.doc,.docx" onchange="handleFileUpload(1)" style="display: none;">
+                        <button class="btn-secondary" onclick="document.getElementById('file1').click()">Upload File</button>
+                        <button class="btn-secondary" onclick="loadSample(1)">Load Sample</button>
+                    </div>
+                </div>
+                <textarea id="doc1" placeholder="Paste your transcript here or upload a file..."></textarea>
+            </div>
+
+            <div class="input-panel">
+                <div class="panel-header">
+                    <h2>Transcript with codes</h2>
+                    <div class="header-actions">
+                        <input type="file" id="file2" accept=".txt,.doc,.docx" onchange="handleFileUpload(2)" style="display: none;">
+                        <button class="btn-secondary" onclick="document.getElementById('file2').click()"> Upload File</button>
+                        <button class="btn-secondary" onclick="loadSample(2)">Load Sample</button>
+                    </div>
+                </div>
+                <textarea id="doc2" placeholder="Paste your coded transcript here or upload a file..."></textarea>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="compareDocuments()">Compare Documents</button>
+            <label class="checkbox-label">
+                <input type="checkbox" id="showCleaned" onchange="toggleDisplayMode()">
+                Show cleaned text (remove codes) in differences
+            </label>
+        </div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="results-header">
+                <h2>Differences Found</h2>
+                <div class="results-actions">
+                    <button class="btn-secondary" onclick="selectAllLeft()">Select All Left</button>
+                    <button class="btn-secondary" onclick="selectAllRight()">Select All Right</button>
+                    <button class="btn-primary" onclick="exportTranscript()">Export Final Transcript</button>
+                </div>
+            </div>
+
+            <div id="differencesContainer" class="differences-container"></div>
+        </div>
+    </div>
+
+    <script src="diff.js"></script>
+</body>
+</html>
