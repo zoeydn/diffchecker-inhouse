@@ -249,19 +249,6 @@ function createDiffItem(diff, index) {
     const div = document.createElement('div');
     div.className = 'diff-item';
 
-    let headerText = '';
-    switch(diff.type) {
-        case 'modified':
-            headerText = `Modified (Line ${diff.leftIndex + 1} / ${diff.rightIndex + 1})`;
-            break;
-        case 'added':
-            headerText = `Added (Line ${diff.rightIndex + 1} in Document 2)`;
-            break;
-        case 'deleted':
-            headerText = `Deleted (Line ${diff.leftIndex + 1} in Document 1)`;
-            break;
-    }
-
     // Check if user wants to see cleaned or original text
     const showCleaned = document.getElementById('showCleaned').checked;
 
@@ -274,7 +261,6 @@ function createDiffItem(diff, index) {
         : diff.right;
 
     div.innerHTML = `
-        <div class="diff-header">${headerText}</div>
         <div class="diff-column-headers">
             <div class="column-header">Transcript without codes</div>
             <div class="column-header">Transcript with codes</div>
