@@ -380,13 +380,9 @@ function exportTranscript() {
                 }
             } else {
                 // No selection made - mark as unresolved
-                if (diff.type === 'modified') {
-                    finalText = `[UNRESOLVED - DOC1]: ${diff.left} | [DOC2]: ${diff.right}`;
-                } else if (diff.type === 'added') {
-                    finalText = `[UNRESOLVED - ADDED]: ${diff.right}`;
-                } else if (diff.type === 'deleted') {
-                    finalText = `[UNRESOLVED - DELETED]: ${diff.left}`;
-                }
+                const leftText = diff.left || 'N/A';
+                const rightText = diff.right || 'N/A';
+                finalText = `[UNRESOLVED - DOC1]: ${leftText} | [DOC2]: ${rightText}`;
             }
             diffIndex++;
         }

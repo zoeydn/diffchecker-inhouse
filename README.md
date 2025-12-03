@@ -34,13 +34,7 @@ Click the "Load Sample" buttons to see example documents and try out the compari
 
 The diff checker:
 1. Splits both documents into lines
-2. Removes codes for comparison:
-   - `[[...]]` double bracket markup
-   - `[FEL:...]`, `[ACTION:...]`, `[SOUND:...]` tags with content
-   - `[HH:MM:SS]` timestamps
-   - `[Speaker N]` codes
-   - `[NAR:]`, `[NARR:]`, `[NARRATIVE:]` wrapper tags (keeps content inside)
-   - All other bracketed codes
+2. Removes codes for comparison
 3. Compares the cleaned text to identify real differences
 4. Displays differences side-by-side:
    - Red background: Lines only in Document 1
