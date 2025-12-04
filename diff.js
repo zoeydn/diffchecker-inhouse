@@ -364,8 +364,8 @@ function exportTranscript() {
         let finalText = '';
 
         if (diff.type === 'unchanged') {
-            // Keep unchanged lines as-is
-            finalText = diff.left || diff.right;
+            // Keep unchanged lines, prefer coded version (right)
+            finalText = diff.right || diff.left;
         } else {
             // Check if user made a selection
             const selection = selections[diffIndex];
