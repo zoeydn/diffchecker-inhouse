@@ -42,33 +42,19 @@ function cleanText(text, shouldClean) {
     // Step 1: Remove [[ ]] double bracket markup patterns
     cleaned = cleaned.replace(/\[\[.*?\]\]/g, '');
 
-    // Step 2: Remove specific inner tags completely (tag + content)
-    // These tags should be removed entirely including their content
-    cleaned = cleaned.replace(/\[FEL:.*?\]/g, ''); // Remove [FEL: ...] tags
-    cleaned = cleaned.replace(/\[ACTION:.*?\]/gi, ''); // Remove [ACTION: ...] tags
-    cleaned = cleaned.replace(/\[SOUND:.*?\]/gi, ''); // Remove [SOUND: ...] tags
+    // Step 2: Remove all tagged codes completely (tag + content)
+    // Matches any pattern like [TAG: content] where TAG is uppercase letters
+    cleaned = cleaned.replace(/\[[A-Z]+:.*?\]/gi, '');
 
-    // Step 3: Remove timestamps like [00:12:34]
-    cleaned = cleaned.replace(/\[\d+:\d+:\d+\]/g, '');
-
-    // Step 4: Remove speaker codes like [Speaker 1]
-    cleaned = cleaned.replace(/\[Speaker \d+\]/gi, '');
-
-    // Step 5: Remove narrative wrapper tags but keep content
-    // Remove opening tags like [NAR: and trailing ]
-    cleaned = cleaned.replace(/\[NAR:\s*/gi, ''); // Remove [NAR:
-    cleaned = cleaned.replace(/\[NARR:\s*/gi, ''); // Remove [NARR:
-    cleaned = cleaned.replace(/\[NARRATIVE:\s*/gi, ''); // Remove [NARRATIVE:
-
-    // Step 6: Remove any remaining bracketed codes entirely (including content)
-    // This catches things like [n], [x], [ABC], etc.
+    // Step 3: Remove any remaining bracketed codes entirely (including content)
+    // This catches timestamps [00:12:34], speaker codes [Speaker 1], and other patterns like [n], [x], [ABC]
     cleaned = cleaned.replace(/\[.*?\]/g, '');
 
-    // Step 7: Remove any orphaned brackets that might remain
+    // Step 4: Remove any orphaned brackets that might remain
     cleaned = cleaned.replace(/\]/g, '');
     cleaned = cleaned.replace(/\[/g, '');
 
-    // Step 8: Clean up extra whitespace
+    // Step 5: Clean up extra whitespace
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
     return cleaned;
