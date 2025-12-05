@@ -39,20 +39,35 @@ function cleanText(text, shouldClean) {
 
     let cleaned = text;
 
-    // Step 1: Remove [[ ]] double bracket markup patterns
-    cleaned = cleaned.replace(/\[\[.*?\]\]/g, '');
+    // Process nested codes from innermost to outermost
+    // This prevents the regex from matching across nested brackets incorrectly
+    let iterations = 0;
+    const maxIterations = 10; // Safety limit to prevent infinite loops
 
-    // Step 2: Remove all tagged codes completely (tag + content)
-    // Matches any pattern like [TAG: content] where TAG is uppercase letters
-    cleaned = cleaned.replace(/\[[A-Z]+:.*?\]/gi, '');
+    while (iterations < maxIterations) {
+        const before = cleaned;
 
-    // Step 3: Remove any remaining bracketed codes entirely (including content)
-    // This catches timestamps [00:12:34], speaker codes [Speaker 1], and other patterns like [n], [x], [ABC]
+        // Step 1: Remove short inline codes completely 
+        // Match [TAG: content] where content is short (≤20 chars) and has no nested brackets
+        // Examples: [FEL: scared]
+        cleaned = cleaned.replace(/\[[A-Z]+:[^\[]{0,20}\]/g, '');
+
+        // Step 2: Unwrap longer codes (narration, speaker labels, etc.) - keep their content
+        // Match [TAG: content] where content is longer (>20 chars) and has no nested brackets
+        // Examples: [NAR: long transcription text...]
+        cleaned = cleaned.replace(/\[[A-Z]+:([^\[]{21,}?)\]/g, '$1');
+
+        // If nothing changed in this iteration, we're done
+        if (cleaned === before) break;
+        iterations++;
+    }
+
+    // Step 3: Remove any other bracketed content (timestamps, markers, etc.)
+    // This catches [[ ]] markup, timestamps [00:12:34], speaker codes [Speaker 1], and other patterns like [n], [x], [ABC]
     cleaned = cleaned.replace(/\[.*?\]/g, '');
 
     // Step 4: Remove any orphaned brackets that might remain
-    cleaned = cleaned.replace(/\]/g, '');
-    cleaned = cleaned.replace(/\[/g, '');
+    cleaned = cleaned.replace(/[\[\]]/g, '');
 
     // Step 5: Clean up extra whitespace
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
