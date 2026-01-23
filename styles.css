@@ -191,14 +191,12 @@ textarea:focus {
 .diff-removed {
     background-color: #ffcdd2;
     color: #b71c1c;
-    padding: 1px 3px;
     border-radius: 3px;
 }
 
 .diff-added {
     background-color: #c8e6c9;
     color: #1b5e20;
-    padding: 1px 3px;
     border-radius: 3px;
 }
 

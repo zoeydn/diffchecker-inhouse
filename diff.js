@@ -43,25 +43,45 @@ function cleanText(text, shouldClean) {
 
     let cleaned = text;
 
-    // Preserve interviewer tags by replacing with placeholders
+    // Step 0: Preserve interviewer tags by replacing with placeholders
     const interviewerTags = [];
     cleaned = cleaned.replace(/\[(INT|Interviewer|INTERVIEWER|Int)[:\s][^\]]*\]/gi, (match) => {
         interviewerTags.push(match);
         return `__INTERVIEWER_${interviewerTags.length - 1}__`;
     });
 
-    // Remove all bracketed content (replace with space to prevent word merging)
-    cleaned = cleaned.replace(/\[.*?\]/g, ' ');
+    // Process nested codes from innermost to outermost
+    // This prevents the regex from matching across nested brackets incorrectly
+    let iterations = 0;
+    const maxIterations = 10; // Safety limit to prevent infinite loops
 
-    // Remove any single brackets
+    while (iterations < maxIterations) {
+        const before = cleaned;
+
+        // Remove [TAG: content] patterns, keeping just the content
+        // Examples: [FEL: scared] -> "scared", [NAR: text here] -> "text here"
+        cleaned = cleaned.replace(/\[[A-Z]+:\s*([^\[\]]*)\]/g, '$1');
+
+        // If nothing changed in this iteration, we're done
+        if (cleaned === before) break;
+        iterations++;
+    }
+
+    // Step 3: Remove any other bracketed content (timestamps, markers, etc.)
+    // Replace with a single space to prevent word merging
+    cleaned = cleaned.replace(/\[.*?\]/g, '');
+
+    // Step 4: Remove any orphaned brackets that might remain
     cleaned = cleaned.replace(/[\[\]]/g, '');
 
-    // Restore interviewer tags
+    // Step 5: Restore interviewer tags
     interviewerTags.forEach((tag, index) => {
         cleaned = cleaned.replace(`__INTERVIEWER_${index}__`, tag);
     });
 
-    // Trim whitespace
+    // Normalize whitespace: collapse multiple spaces/newlines into single spaces
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    // Step 6: Only trim leading/trailing whitespace, preserve internal spacing
     cleaned = cleaned.trim();
 
     return cleaned;
@@ -483,15 +503,20 @@ function createDiffItem(diff, index) {
         ? diff.rightCleaned
         : diff.right;
 
+    // Normalize whitespace for display: collapse multiple spaces/newlines into single spaces
+    const normalizeDisplay = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : s);
+    const normLeft = normalizeDisplay(displayLeft);
+    const normRight = normalizeDisplay(displayRight);
+
     // Generate highlighted HTML for modified cells
     let leftHtml, rightHtml;
-    if (diff.type === 'modified' && displayLeft !== null && displayRight !== null) {
-        const highlighted = highlightDiff(displayLeft, displayRight);
+    if (diff.type === 'modified' && normLeft !== null && normRight !== null) {
+        const highlighted = highlightDiff(normLeft, normRight);
         leftHtml = highlighted.left || '<em>Empty cell</em>';
         rightHtml = highlighted.right || '<em>Empty cell</em>';
     } else {
-        leftHtml = displayLeft !== null ? escapeHtml(displayLeft) || '<em>Empty cell</em>' : null;
-        rightHtml = displayRight !== null ? escapeHtml(displayRight) || '<em>Empty cell</em>' : null;
+        leftHtml = normLeft !== null ? escapeHtml(normLeft) || '<em>Empty cell</em>' : null;
+        rightHtml = normRight !== null ? escapeHtml(normRight) || '<em>Empty cell</em>' : null;
     }
 
     // Cell location label for CSV mode
@@ -597,82 +622,11 @@ function selectAllRight() {
 }
 
 function exportTranscript() {
-    // Check for unresolved differences
-    const significantDiffs = differences.filter(d => d.type !== 'unchanged');
-    const unresolvedItems = significantDiffs
-        .map((diff, index) => ({ diff, index }))
-        .filter(({ index }) => !selections[index]);
-
-    if (unresolvedItems.length > 0) {
-        const locations = unresolvedItems.map(({ diff }) => {
-            const colName = csvHeaders && csvHeaders[diff.col] ? csvHeaders[diff.col] : `Column ${diff.col + 1}`;
-            return `  - Row ${diff.row + 1}, ${colName}`;
-        }).join('\n');
-
-        const proceed = confirm(`Warning: ${unresolvedItems.length} difference(s) are unresolved:\n\n${locations}\n\nUnresolved items will be marked as [UNRESOLVED] in the export.\n\nDo you want to continue?`);
-        if (!proceed) return;
+    if (!csvMode) {
+        alert('Export is only available for CSV files.');
+        return;
     }
-
-    if (csvMode) {
-        exportCSV();
-    } else {
-        exportText();
-    }
-}
-
-function exportText() {
-    const textLines = [];
-
-    const significantDiffs = differences.filter(d => d.type !== 'unchanged');
-    let diffIndex = 0;
-
-    differences.forEach((diff, originalIndex) => {
-        let finalText = '';
-
-        if (diff.type === 'unchanged') {
-            // Keep unchanged lines, prefer coded version (right)
-            finalText = diff.right || diff.left;
-        } else {
-            // Check if user made a selection
-            const selection = selections[diffIndex];
-
-            if (selection) {
-                if (selection.choice === 'left' && diff.left !== null) {
-                    finalText = diff.left;
-                } else if (selection.choice === 'right' && diff.right !== null) {
-                    finalText = diff.right;
-                } else if (selection.choice === 'manual') {
-                    finalText = selection.customText || '';
-                }
-            } else {
-                // No selection made - mark as unresolved
-                const leftText = diff.left || 'N/A';
-                const rightText = diff.right || 'N/A';
-                finalText = `[UNRESOLVED - DOC1]: ${leftText} | [DOC2]: ${rightText}`;
-            }
-            diffIndex++;
-        }
-
-        // Only add line if there's content
-        if (finalText) {
-            textLines.push(finalText);
-        }
-    });
-
-    const textContent = textLines.join('\n');
-
-    // Download the TXT file
-    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `merged-transcript-${new Date().toISOString().slice(0,10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    alert('Final transcript exported as TXT successfully!');
+    exportCSV();
 }
 
 function exportCSV() {
