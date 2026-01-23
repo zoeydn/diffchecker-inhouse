@@ -40,7 +40,7 @@ Internal diff-checker for CSV comparison
 
 ## Usage Tips
 
-- **Toggle display**: Use "Show cleaned text (remove codes) in differences" checkbox to switch between viewing original vs cleaned text
+- **Show cleaned text**: Check the box to hide codes like `[FEL:]` and `[NAR:]` when viewing differences
 - **Load samples**: Click "Load Sample" buttons to test with example data
 - **Unresolved differences**: Warning popup lists all unresolved items (with row/column) before export. Unresolved items are marked as `[UNRESOLVED]` in the output
 - **Unchanged content**: Automatically included in the final output
