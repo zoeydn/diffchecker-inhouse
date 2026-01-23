@@ -5,6 +5,7 @@ let csvMode = false;
 let csvData1 = null;
 let csvData2 = null;
 let csvHeaders = null;
+let uploadedFiles = { 1: null, 2: null };
 
 // Handle file upload
 function handleFileUpload(docNum) {
@@ -15,11 +16,24 @@ function handleFileUpload(docNum) {
         return;
     }
 
+    // Check if this file was already uploaded to the other panel
+    const otherDocNum = docNum === 1 ? 2 : 1;
+    if (uploadedFiles[otherDocNum] === file.name) {
+        const proceed = confirm(`"${file.name}" is already uploaded to CSV ${otherDocNum}.\n\nUpload anyway?`);
+        if (!proceed) {
+            fileInput.value = '';
+            return;
+        }
+    }
+
     const reader = new FileReader();
 
     reader.onload = function(e) {
         const content = e.target.result;
         document.getElementById(`doc${docNum}`).value = content;
+
+        // Track uploaded filename
+        uploadedFiles[docNum] = file.name;
 
         // Show filename feedback
         const textarea = document.getElementById(`doc${docNum}`);
@@ -27,10 +41,14 @@ function handleFileUpload(docNum) {
         setTimeout(() => {
             textarea.style.borderColor = '#ddd';
         }, 1000);
+
+        // Reset file input so the same file can be uploaded again
+        fileInput.value = '';
     };
 
     reader.onerror = function() {
         alert('Error reading file. Please try again.');
+        fileInput.value = '';
     };
 
     // Read the file as text
