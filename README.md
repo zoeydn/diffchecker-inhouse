@@ -11,7 +11,7 @@ Internal diff-checker for CSV comparison
   - Green highlight: text in CSV 2
 - **Smart code filtering**: Automatically removes bracketed codes when comparing
   - Preserves `[INT:]`, `[Interviewer:]` and similar interviewer tags
-  - Removes other codes like `[FEL: scared]`, `[NAR: ...]`, etc.
+  - Removes tags but keeps content: `[FEL: scared]` → `scared`, `[NAR: text here]` → `text here`
   - Toggle to view original or cleaned text in the interface
 - **Interactive difference resolution**:
   - Radio button selection to choose from CSV 1 or CSV 2
@@ -24,7 +24,6 @@ Internal diff-checker for CSV comparison
 1. **Open the app**: Double-click `index.html` in your web browser
 2. **Upload or paste** your two CSV files:
    - Click "Upload File" to select a .csv file
-   - Or paste CSV text directly into the text areas
 3. Click **"Compare Documents"** to see the differences
 4. For each difference, choose:
    - **Left option** (CSV 1)
@@ -46,11 +45,3 @@ Internal diff-checker for CSV comparison
 - **Unresolved differences**: Warning popup lists all unresolved items (with row/column) before export. Unresolved items are marked as `[UNRESOLVED]` in the output
 - **Unchanged content**: Automatically included in the final output
 - **Export naming**: Files are named with the current date (e.g., `merged-csv-2025-01-22.csv`)
-
-## Technical Details
-
-- **Pure vanilla JavaScript** (no dependencies)
-- **Responsive design** works on desktop and tablet
-- **Client-side only** (no server required, all processing in browser)
-- **File format support**: .csv files only
-- **Privacy**: All data stays on your computer, nothing is uploaded
