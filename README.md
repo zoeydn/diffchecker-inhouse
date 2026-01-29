@@ -13,6 +13,11 @@ Internal diff-checker for CSV comparison
   - Preserves `[INT:]`, `[Interviewer:]` and similar interviewer tags
   - Removes tags but keeps content: `[FEL: scared]` → `scared`, `[NAR: text here]` → `text here`
   - Toggle to view original or cleaned text in the interface
+- **Column selection**: Choose which columns to compare before running the diff
+  - Preview content from each column to identify the right ones
+  - Empty columns are automatically hidden
+  - Select All / Deselect All buttons for quick selection
+  - "Back to Columns" button to change selection after viewing results
 - **Interactive difference resolution**:
   - Radio button selection to choose from CSV 1 or CSV 2
   - Manual text input field for custom edits
@@ -24,19 +29,22 @@ Internal diff-checker for CSV comparison
 1. **Open the app**: Double-click `index.html` in your web browser
 2. **Upload or paste** your two CSV files:
    - Click "Upload File" to select a .csv file
-3. Click **"Compare Documents"** to see the differences
-4. For each difference, choose:
+3. Click **"Compare Documents"**
+4. **Select columns to compare**: Check the columns you want to diff (preview shows sample content)
+5. Click **"Compare Selected Columns"** to see the differences
+6. For each difference, choose:
    - **Left option** (CSV 1)
    - **Right option** (CSV 2)
    - Or **enter custom text** manually
-5. Click **"Export Final Transcript"** to download your merged CSV
+7. Click **"Export Final Transcript"** to download your merged CSV
 
 ## How It Works
 
 1. Parses both CSV files into rows and columns
-2. Compares each cell at matching positions
-3. Shows differences with row/column location (e.g., "Row 2 — Q11:")
-4. Exports merged CSV with your selections
+2. Shows column picker with preview of each column's content
+3. Compares only selected columns cell by cell
+4. Shows differences with row/column location (e.g., "Row 2 — Q11:")
+5. Exports merged CSV with your selections
 
 ## Usage Tips
 

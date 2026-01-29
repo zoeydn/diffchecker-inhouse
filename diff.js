@@ -6,6 +6,7 @@ let csvData1 = null;
 let csvData2 = null;
 let csvHeaders = null;
 let uploadedFiles = { 1: null, 2: null };
+let selectedColumns = new Set();
 
 // Handle file upload
 function handleFileUpload(docNum) {
@@ -257,7 +258,7 @@ function isCSV(text) {
 }
 
 // Compare CSV data cell by cell
-function diffCSV(csv1, csv2) {
+function diffCSV(csv1, csv2, columnsToCompare = null) {
     const diffs = [];
     const maxRows = Math.max(csv1.length, csv2.length);
 
@@ -267,6 +268,11 @@ function diffCSV(csv1, csv2) {
         const maxCols = Math.max(row1.length, row2.length);
 
         for (let col = 0; col < maxCols; col++) {
+            // Skip columns not in the selected set (if provided)
+            if (columnsToCompare && !columnsToCompare.has(col)) {
+                continue;
+            }
+
             const cell1 = row1[col] !== undefined ? row1[col] : null;
             const cell2 = row2[col] !== undefined ? row2[col] : null;
 
@@ -436,35 +442,167 @@ function compareDocuments() {
         csvHeaders = csvData1[0] && csvData1[0].length >= (csvData2[0] ? csvData2[0].length : 0)
             ? csvData1[0]
             : (csvData2[0] || []);
-        differences = diffCSV(csvData1, csvData2);
 
-        // Debug logging
-        console.log('=== CSV DEBUG ===');
-        console.log('CSV1 rows:', csvData1.length, 'cols in first row:', csvData1[0]?.length);
-        console.log('CSV2 rows:', csvData2.length, 'cols in first row:', csvData2[0]?.length);
-        console.log('Headers:', csvHeaders.slice(0, 5));
-        console.log('First few cells of row 1 CSV1:', csvData1[0]?.slice(0, 3));
-        console.log('First few cells of row 1 CSV2:', csvData2[0]?.slice(0, 3));
-        console.log('Differences found:', differences.length);
-        if (differences.length > 0) {
-            console.log('First difference:', differences[0]);
-        }
+        // Show column picker first
+        showColumnPicker();
     } else {
         csvData1 = null;
         csvData2 = null;
         csvHeaders = null;
         differences = diffLines(doc1, doc2, true);
+
+        selections = {};
+        renderDifferences();
+        document.getElementById('resultsSection').style.display = 'block';
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function showColumnPicker() {
+    const container = document.getElementById('columnPickerContainer');
+    container.innerHTML = '';
+
+    // Reset selected columns - select all by default
+    selectedColumns = new Set();
+
+    // Find max columns across ALL rows (not just row 0)
+    const maxCols1 = Math.max(...csvData1.map(row => row ? row.length : 0));
+    const maxCols2 = Math.max(...csvData2.map(row => row ? row.length : 0));
+    const maxCols = Math.max(maxCols1, maxCols2);
+
+    for (let col = 0; col < maxCols; col++) {
+        // Skip empty columns (no data in either CSV)
+        if (isColumnEmpty(col)) {
+            continue;
+        }
+
+        // Get header name - check both CSVs' first rows
+        let headerValue = csvHeaders[col];
+        if (!headerValue || !headerValue.trim()) {
+            // Try to get from the other CSV's first row
+            headerValue = csvData1[0] && csvData1[0][col] ? csvData1[0][col] : null;
+            if (!headerValue || !headerValue.trim()) {
+                headerValue = csvData2[0] && csvData2[0][col] ? csvData2[0][col] : null;
+            }
+        }
+        const colName = (headerValue && headerValue.trim()) ? headerValue.trim() : `Column ${col + 1}`;
+
+        // Get preview content from first few data rows
+        const preview1 = getColumnPreview(csvData1, col);
+        const preview2 = getColumnPreview(csvData2, col);
+
+        const item = document.createElement('div');
+        item.className = 'column-picker-item';
+        item.id = `col-picker-${col}`;
+
+        item.innerHTML = `
+            <label>
+                <input type="checkbox" onchange="toggleColumn(${col})">
+                <div class="column-picker-info">
+                    <div class="column-picker-name">${escapeHtml(colName)}</div>
+                    <div class="column-picker-preview">
+                        <strong>CSV1:</strong> ${escapeHtml(preview1)}<br>
+                        <strong>CSV2:</strong> ${escapeHtml(preview2)}
+                    </div>
+                </div>
+            </label>
+        `;
+
+        container.appendChild(item);
     }
 
-    selections = {};
+    // Hide results, show column picker
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('columnPickerSection').style.display = 'block';
+    document.getElementById('columnPickerSection').scrollIntoView({ behavior: 'smooth' });
+}
 
+function getColumnPreview(csvData, col) {
+    const previews = [];
+    // Get content from rows 0-4 (include all rows to show preview)
+    for (let row = 0; row <= 4 && row < csvData.length; row++) {
+        if (csvData[row] && csvData[row][col] !== undefined) {
+            const cellValue = String(csvData[row][col]);
+            if (cellValue.trim()) {
+                const text = cellValue.substring(0, 40);
+                previews.push(text + (cellValue.length > 40 ? '...' : ''));
+            }
+        }
+    }
+    return previews.length > 0 ? previews.join(' | ') : '(no data)';
+}
+
+// Check if a column has any data in either CSV
+function isColumnEmpty(col) {
+    // Check all rows in both CSVs
+    for (let row = 0; row < csvData1.length; row++) {
+        if (csvData1[row] && csvData1[row][col] && String(csvData1[row][col]).trim()) {
+            return false;
+        }
+    }
+    for (let row = 0; row < csvData2.length; row++) {
+        if (csvData2[row] && csvData2[row][col] && String(csvData2[row][col]).trim()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function toggleColumn(col) {
+    const item = document.getElementById(`col-picker-${col}`);
+    if (selectedColumns.has(col)) {
+        selectedColumns.delete(col);
+        item.classList.remove('selected');
+    } else {
+        selectedColumns.add(col);
+        item.classList.add('selected');
+    }
+}
+
+function selectAllColumns() {
+    const maxCols = csvHeaders.length;
+    for (let col = 0; col < maxCols; col++) {
+        selectedColumns.add(col);
+        const item = document.getElementById(`col-picker-${col}`);
+        if (item) {
+            item.classList.add('selected');
+            item.querySelector('input[type="checkbox"]').checked = true;
+        }
+    }
+}
+
+function deselectAllColumns() {
+    selectedColumns.clear();
+    const items = document.querySelectorAll('.column-picker-item');
+    items.forEach(item => {
+        item.classList.remove('selected');
+        item.querySelector('input[type="checkbox"]').checked = false;
+    });
+}
+
+function proceedWithComparison() {
+    if (selectedColumns.size === 0) {
+        alert('Please select at least one column to compare.');
+        return;
+    }
+
+    // Run diff only for selected columns
+    differences = diffCSV(csvData1, csvData2, selectedColumns);
+
+    selections = {};
     renderDifferences();
 
-    // Show results section
+    // Hide column picker, show results
+    document.getElementById('columnPickerSection').style.display = 'none';
     document.getElementById('resultsSection').style.display = 'block';
-
-    // Scroll to results
     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function backToColumnSelection() {
+    // Hide results, show column picker
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('columnPickerSection').style.display = 'block';
+    document.getElementById('columnPickerSection').scrollIntoView({ behavior: 'smooth' });
 }
 
 function toggleDisplayMode() {

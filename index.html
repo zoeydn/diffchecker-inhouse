@@ -47,10 +47,24 @@
             </label>
         </div>
 
+        <div id="columnPickerSection" class="column-picker-section" style="display: none;">
+            <div class="column-picker-header">
+                <h2>Select Columns to Compare</h2>
+                <p>Preview the content and check the columns you want to compare</p>
+            </div>
+            <div id="columnPickerContainer" class="column-picker-container"></div>
+            <div class="column-picker-actions">
+                <button class="btn-secondary" onclick="selectAllColumns()">Select All</button>
+                <button class="btn-secondary" onclick="deselectAllColumns()">Deselect All</button>
+                <button class="btn-primary" onclick="proceedWithComparison()">Compare Selected Columns</button>
+            </div>
+        </div>
+
         <div id="resultsSection" class="results-section" style="display: none;">
             <div class="results-header">
                 <h2>Differences Found</h2>
                 <div class="results-actions">
+                    <button class="btn-secondary" onclick="backToColumnSelection()">Back to Columns</button>
                     <button class="btn-secondary" onclick="selectAllLeft()">Select All Left</button>
                     <button class="btn-secondary" onclick="selectAllRight()">Select All Right</button>
                     <button class="btn-primary" onclick="exportTranscript()">Export Final Transcript</button>
