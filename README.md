@@ -51,7 +51,8 @@ Internal diff-checker for CSV comparison
 - **Show cleaned text**: Check the box to hide codes like `[FEL:]` and `[NAR:]` when viewing differences
 - **Load samples**: Click "Load Sample" buttons to test with example data
 - **Duplicate file warning**: Warns you if you try to upload the same file to both panels
-- **Unresolved differences**: Warning popup lists all unresolved items (with row/column) before export. Unresolved items are marked as `[UNRESOLVED]` in the output
-- **Non-compared columns warning**: If columns you didn't compare have differences, a warning shows which columns have unresolved differences
+- **Export warnings** (in order):
+  1. **Unresolved differences**: If you didn't resolve all row differences in compared columns, warns you which rows are unresolved. These are marked as `[UNRESOLVED]` in the output
+  2. **Non-compared columns**: If columns you didn't compare have differences, warns you which columns. These use CSV 2 values by default
 - **Unchanged content**: Automatically included in the final output
 - **Export naming**: Files are named with the current date (e.g., `merged-csv-2025-01-22.csv`)
