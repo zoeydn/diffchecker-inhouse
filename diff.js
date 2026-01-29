@@ -786,6 +786,47 @@ function exportTranscript() {
 }
 
 function exportCSV() {
+    // Check for non-compared columns that have differences
+    if (selectedColumns.size > 0) {
+        const maxCols1 = Math.max(...csvData1.map(row => row ? row.length : 0));
+        const maxCols2 = Math.max(...csvData2.map(row => row ? row.length : 0));
+        const maxCols = Math.max(maxCols1, maxCols2);
+        const maxRows = Math.max(csvData1.length, csvData2.length);
+
+        const colsWithDiffs = [];
+
+        for (let col = 0; col < maxCols; col++) {
+            if (!isColumnEmpty(col) && !selectedColumns.has(col)) {
+                // Check if this column has any differences
+                let hasDiff = false;
+                for (let row = 0; row < maxRows; row++) {
+                    const cell1 = csvData1[row] && csvData1[row][col] !== undefined ? csvData1[row][col] : null;
+                    const cell2 = csvData2[row] && csvData2[row][col] !== undefined ? csvData2[row][col] : null;
+                    const cleaned1 = cell1 !== null ? cleanText(cell1, true) : null;
+                    const cleaned2 = cell2 !== null ? cleanText(cell2, true) : null;
+                    if (cleaned1 !== cleaned2) {
+                        hasDiff = true;
+                        break;
+                    }
+                }
+                if (hasDiff) {
+                    const colName = csvHeaders && csvHeaders[col] ? csvHeaders[col] : `Column ${col + 1}`;
+                    colsWithDiffs.push(colName);
+                }
+            }
+        }
+
+        if (colsWithDiffs.length > 0) {
+            const proceed = confirm(
+                `Warning: ${colsWithDiffs.length} column(s) have differences that were not compared:\n\n` +
+                colsWithDiffs.slice(0, 10).join(', ') +
+                (colsWithDiffs.length > 10 ? `, ...and ${colsWithDiffs.length - 10} more` : '') +
+                '\n\nThese columns will use CSV 2 values in the export.\n\nContinue?'
+            );
+            if (!proceed) return;
+        }
+    }
+
     // Check for unresolved differences and warn user
     const unresolved = [];
     differences.forEach((diff, index) => {
