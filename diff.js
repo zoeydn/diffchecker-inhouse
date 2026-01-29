@@ -786,6 +786,25 @@ function exportTranscript() {
 }
 
 function exportCSV() {
+    // Check for unresolved differences in compared columns (show this first)
+    const unresolved = [];
+    differences.forEach((diff, index) => {
+        if (!selections[index]) {
+            const colName = csvHeaders && csvHeaders[diff.col] ? csvHeaders[diff.col] : `Column ${diff.col + 1}`;
+            unresolved.push(`Row ${diff.row + 1}, ${colName}`);
+        }
+    });
+
+    if (unresolved.length > 0) {
+        const proceed = confirm(
+            `Warning: ${unresolved.length} unresolved difference(s):\n\n` +
+            unresolved.slice(0, 10).join('\n') +
+            (unresolved.length > 10 ? `\n...and ${unresolved.length - 10} more` : '') +
+            '\n\nThese will be marked as [UNRESOLVED] in the output.\n\nContinue anyway?'
+        );
+        if (!proceed) return;
+    }
+
     // Check for non-compared columns that have differences
     if (selectedColumns.size > 0) {
         const maxCols1 = Math.max(...csvData1.map(row => row ? row.length : 0));
@@ -825,25 +844,6 @@ function exportCSV() {
             );
             if (!proceed) return;
         }
-    }
-
-    // Check for unresolved differences and warn user
-    const unresolved = [];
-    differences.forEach((diff, index) => {
-        if (!selections[index]) {
-            const colName = csvHeaders && csvHeaders[diff.col] ? csvHeaders[diff.col] : `Column ${diff.col + 1}`;
-            unresolved.push(`Row ${diff.row + 1}, ${colName}`);
-        }
-    });
-
-    if (unresolved.length > 0) {
-        const proceed = confirm(
-            `Warning: ${unresolved.length} unresolved difference(s):\n\n` +
-            unresolved.slice(0, 10).join('\n') +
-            (unresolved.length > 10 ? `\n...and ${unresolved.length - 10} more` : '') +
-            '\n\nThese will be marked as [UNRESOLVED] in the output.\n\nContinue anyway?'
-        );
-        if (!proceed) return;
     }
 
     // Start with the larger CSV as base (prefer CSV2 for coded version)
