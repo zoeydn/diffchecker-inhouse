@@ -284,7 +284,7 @@ function diffCSV(csv1, csv2, columnsToCompare = null) {
                 type = 'added';
             } else if (cell1 !== null && cell2 === null) {
                 type = 'deleted';
-            } else if (cleaned1 !== cleaned2) {
+            } else if (cell1 !== cell2) {
                 type = 'modified';
             }
 
@@ -310,8 +310,10 @@ function diffLines(text1, text2, ignoreMarkup) {
     const lines1 = text1.split('\n');
     const lines2 = text2.split('\n');
 
-    const cleanedLines1 = lines1.map(line => cleanText(line, ignoreMarkup));
-    const cleanedLines2 = lines2.map(line => cleanText(line, ignoreMarkup));
+    const cleanedLines1 = lines1.map(line => cleanText(line, true));
+    const cleanedLines2 = lines2.map(line => cleanText(line, true));
+    const compareLines1 = lines1.map(line => (ignoreMarkup ? cleanText(line, true) : line).trim());
+    const compareLines2 = lines2.map(line => (ignoreMarkup ? cleanText(line, true) : line).trim());
 
     const diffs = [];
     let i = 0, j = 0;
@@ -342,8 +344,8 @@ function diffLines(text1, text2, ignoreMarkup) {
             });
             i++;
         } else {
-            const clean1 = cleanedLines1[i].trim();
-            const clean2 = cleanedLines2[j].trim();
+            const clean1 = compareLines1[i];
+            const clean2 = compareLines2[j];
 
             if (clean1 === clean2) {
                 // Lines match (when cleaned)
@@ -365,7 +367,7 @@ function diffLines(text1, text2, ignoreMarkup) {
 
                 // Check next few lines for potential match
                 for (let k = 1; k <= 3; k++) {
-                    if (j + k < lines2.length && cleanedLines1[i].trim() === cleanedLines2[j + k].trim()) {
+                    if (j + k < lines2.length && compareLines1[i] === compareLines2[j + k]) {
                         // Lines j to j+k-1 are additions
                         for (let l = 0; l < k; l++) {
                             diffs.push({
@@ -383,7 +385,7 @@ function diffLines(text1, text2, ignoreMarkup) {
                         break;
                     }
 
-                    if (i + k < lines1.length && cleanedLines1[i + k].trim() === cleanedLines2[j].trim()) {
+                    if (i + k < lines1.length && compareLines1[i + k] === compareLines2[j]) {
                         // Lines i to i+k-1 are deletions
                         for (let l = 0; l < k; l++) {
                             diffs.push({
@@ -449,7 +451,7 @@ function compareDocuments() {
         csvData1 = null;
         csvData2 = null;
         csvHeaders = null;
-        differences = diffLines(doc1, doc2, true);
+        differences = diffLines(doc1, doc2, false);
 
         selections = {};
         renderDifferences();
@@ -682,8 +684,20 @@ function createDiffItem(diff, index) {
         cellLocation = `<div class="cell-location">Row ${diff.row + 1} — ${colName}</div>`;
     }
 
+    const leftCleaned = typeof diff.leftCleaned === 'string' ? diff.leftCleaned.trim() : diff.leftCleaned;
+    const rightCleaned = typeof diff.rightCleaned === 'string' ? diff.rightCleaned.trim() : diff.rightCleaned;
+    const sameAfterClean =
+        diff.type === 'modified' &&
+        leftCleaned !== null &&
+        rightCleaned !== null &&
+        leftCleaned === rightCleaned;
+    const sameAfterCleanNote = showCleaned && sameAfterClean
+        ? `<div class="same-after-clean">Same text after code removal</div>`
+        : '';
+
     div.innerHTML = `
         ${cellLocation}
+        ${sameAfterCleanNote}
         <div class="diff-column-headers">
             <div class="column-header">${csvMode ? 'CSV 1' : 'Transcript without codes'}</div>
             <div class="column-header">${csvMode ? 'CSV 2' : 'Transcript with codes'}</div>

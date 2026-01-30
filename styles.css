@@ -188,6 +188,15 @@ textarea:focus {
     font-size: 13px;
 }
 
+.same-after-clean {
+    background: #e8f5e9;
+    color: #1b5e20;
+    padding: 6px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 2px solid #c8e6c9;
+}
+
 .diff-removed {
     background-color: #ffcdd2;
     color: #b71c1c;
