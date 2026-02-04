@@ -41,6 +41,17 @@
 
         <div class="controls">
             <button class="btn-primary" onclick="compareDocuments()">Compare Documents</button>
+            <div class="compare-mode">
+                <div class="compare-mode-label">CSV compare mode</div>
+                <label class="radio-label">
+                    <input type="radio" name="compareMode" value="full" checked>
+                    Compare full CSV
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="compareMode" value="columns">
+                    Choose columns
+                </label>
+            </div>
             <label class="checkbox-label">
                 <input type="checkbox" id="showCleaned" onchange="toggleDisplayMode()">
                 Show cleaned text (remove codes) in differences
@@ -64,7 +75,7 @@
             <div class="results-header">
                 <h2>Differences Found</h2>
                 <div class="results-actions">
-                    <button class="btn-secondary" onclick="backToColumnSelection()">Back to Columns</button>
+                    <button class="btn-secondary" onclick="backToColumnSelection()">Show Columns</button>
                     <button class="btn-secondary" onclick="selectAllLeft()">Select All Left</button>
                     <button class="btn-secondary" onclick="selectAllRight()">Select All Right</button>
                     <button class="btn-primary" onclick="exportTranscript()">Export Final Transcript</button>

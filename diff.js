@@ -7,6 +7,12 @@ let csvData2 = null;
 let csvHeaders = null;
 let uploadedFiles = { 1: null, 2: null };
 let selectedColumns = new Set();
+let compareMode = 'full';
+
+function getCompareMode() {
+    const selected = document.querySelector('input[name="compareMode"]:checked');
+    return selected ? selected.value : 'full';
+}
 
 // Handle file upload
 function handleFileUpload(docNum) {
@@ -436,6 +442,7 @@ function compareDocuments() {
 
     // Detect if both documents are CSV
     csvMode = isCSV(doc1) || isCSV(doc2);
+    compareMode = getCompareMode();
 
     if (csvMode) {
         csvData1 = parseCSV(doc1);
@@ -445,12 +452,23 @@ function compareDocuments() {
             ? csvData1[0]
             : (csvData2[0] || []);
 
-        // Show column picker first
-        showColumnPicker();
+        if (compareMode === 'columns') {
+            // Show column picker first
+            showColumnPicker();
+        } else {
+            document.getElementById('columnPickerSection').style.display = 'none';
+            selectedColumns.clear();
+            differences = diffCSV(csvData1, csvData2, null);
+            selections = {};
+            renderDifferences();
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
     } else {
         csvData1 = null;
         csvData2 = null;
         csvHeaders = null;
+        document.getElementById('columnPickerSection').style.display = 'none';
         differences = diffLines(doc1, doc2, false);
 
         selections = {};
@@ -461,6 +479,11 @@ function compareDocuments() {
 }
 
 function showColumnPicker() {
+    compareMode = 'columns';
+    const columnsRadio = document.querySelector('input[name="compareMode"][value="columns"]');
+    if (columnsRadio) {
+        columnsRadio.checked = true;
+    }
     const container = document.getElementById('columnPickerContainer');
     container.innerHTML = '';
 
@@ -603,8 +626,7 @@ function proceedWithComparison() {
 function backToColumnSelection() {
     // Hide results, show column picker
     document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('columnPickerSection').style.display = 'block';
-    document.getElementById('columnPickerSection').scrollIntoView({ behavior: 'smooth' });
+    showColumnPicker();
 }
 
 function toggleDisplayMode() {
@@ -636,7 +658,8 @@ function renderDifferences() {
     if (csvMode) {
         const modeIndicator = document.createElement('div');
         modeIndicator.className = 'mode-indicator';
-        modeIndicator.innerHTML = `CSV Mode: Comparing cell by cell (${significantDiffs.length} differences found)`;
+        const modeLabel = compareMode === 'columns' ? 'Selected columns' : 'All columns';
+        modeIndicator.innerHTML = `CSV Mode: ${modeLabel} (${significantDiffs.length} differences found)`;
         container.appendChild(modeIndicator);
     }
 
