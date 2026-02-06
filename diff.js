@@ -877,7 +877,7 @@ function exportCSV() {
                 `Warning: ${colsWithDiffs.length} column(s) have differences that were not compared:\n\n` +
                 colsWithDiffs.slice(0, 10).join(', ') +
                 (colsWithDiffs.length > 10 ? `, ...and ${colsWithDiffs.length - 10} more` : '') +
-                '\n\nThese columns will use CSV 2 values in the export.\n\nContinue?'
+                '\n\nThese columns will be marked as [UNRESOLVED] in the export.\n\nContinue?'
             );
             if (!proceed) return;
         }
@@ -899,6 +899,25 @@ function exportCSV() {
             const val2 = csvData2[row] && csvData2[row][col] !== undefined ? csvData2[row][col] : null;
             const val1 = csvData1[row] && csvData1[row][col] !== undefined ? csvData1[row][col] : null;
             result[row][col] = val2 !== null ? val2 : (val1 !== null ? val1 : '');
+        }
+    }
+
+    // Mark non-compared columns with differences as [UNRESOLVED]
+    if (selectedColumns.size > 0) {
+        for (let row = 0; row < maxRows; row++) {
+            for (let col = 0; col < maxCols; col++) {
+                if (!isColumnEmpty(col) && !selectedColumns.has(col)) {
+                    const cell1 = csvData1[row] && csvData1[row][col] !== undefined ? csvData1[row][col] : null;
+                    const cell2 = csvData2[row] && csvData2[row][col] !== undefined ? csvData2[row][col] : null;
+                    const cleaned1 = cell1 !== null ? cleanText(cell1, true) : null;
+                    const cleaned2 = cell2 !== null ? cleanText(cell2, true) : null;
+                    if (cleaned1 !== cleaned2) {
+                        const leftText = cell1 || 'N/A';
+                        const rightText = cell2 || 'N/A';
+                        result[row][col] = `[UNRESOLVED] CSV1: ${leftText} | CSV2: ${rightText}`;
+                    }
+                }
+            }
         }
     }
 
